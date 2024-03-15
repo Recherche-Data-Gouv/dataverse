@@ -377,6 +377,28 @@ public class DatasetPage implements java.io.Serializable {
         this.showIngestSuccess = showIngestSuccess;
     }
 
+    public boolean isDatasetFieldEnabled(Long datasetFieldTypeId){
+
+        if(datasetFieldTypeId == null) {
+            return false;
+        }
+
+        DatasetFieldType datasetFieldType = fieldService.find(datasetFieldTypeId);
+
+        if("keyword".equals(datasetFieldType.getName())) {
+            Dataverse dv = dataset.getOwner();
+            if("inrae".equals(dv.getAlias())) {
+                return true;
+            }
+            for (Dataverse owner : dv.getOwners()) {
+                if("inrae".equals(owner.getAlias())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // TODO: Consider renaming "configureTools" to "fileConfigureTools".
     List<ExternalTool> configureTools = new ArrayList<>();
     // TODO: Consider renaming "exploreTools" to "fileExploreTools".
