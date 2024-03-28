@@ -1018,7 +1018,7 @@ public class IndexServiceBean {
                              */
                             if (dsf.getControlledVocabularyValues().isEmpty()) {
                                 for (DatasetFieldValue dfv : dsf.getDatasetFieldValues()) {
-                                    if (dfv.getValue().equals(DatasetField.NA_VALUE)) {
+                                    if (dfv.getValue() == null || dfv.getValue().equals(DatasetField.NA_VALUE)) {
                                         continue;
                                     }
                                     solrInputDocument.addField(solrFieldSearchable, dfv.getValue());
