@@ -4337,7 +4337,11 @@ public class DatasetPage implements java.io.Serializable {
     }
 
     public void initGuestbookResponse(FileMetadata fileMetadata, String downloadFormat, String selectedFileIds) {
-
+        // fix for https://github.com/IQSS/dataverse/issues/9954
+        if (versionId == null && workingVersion != null) {
+            versionId = workingVersion.getId();
+        }
+        // end fix
         this.guestbookResponse = guestbookResponseService.initGuestbookResponse(fileMetadata, downloadFormat, selectedFileIds, session);
     }
 
