@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.MessageFormat;
@@ -349,8 +350,12 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
         logger.fine("Registering for field: " + dft.getName());
         JsonObject cvocEntry = getCVocConf(true).get(dft.getId());
         if (dft.isPrimitive()) {
+            List<DatasetField> siblingsDatasetFields = new ArrayList<>();
+            if(dft.getParentDatasetFieldType()!=null) {
+                siblingsDatasetFields = df.getParentDatasetFieldCompoundValue().getChildDatasetFields();
+            }
             for (DatasetFieldValue dfv : df.getDatasetFieldValues()) {
-                registerExternalTerm(cvocEntry, dfv.getValue());
+                registerExternalTerm(cvocEntry, dfv.getValue(), siblingsDatasetFields);
             }
         } else {
             if (df.getDatasetFieldType().isCompound()) {
@@ -359,14 +364,14 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
                     for (DatasetField cdf : cv.getChildDatasetFields()) {
                         logger.fine("Found term uri field type id: " + cdf.getDatasetFieldType().getId());
                         if (cdf.getDatasetFieldType().equals(termdft)) {
-                            registerExternalTerm(cvocEntry, cdf.getValue());
+                            registerExternalTerm(cvocEntry, cdf.getValue(), cv.getChildDatasetFields());
                         }
                     }
                 }
             }
         }
     }
-
+    
     /**
      * Retrieves indexable strings from a cached externalvocabularyvalue entry filtered through retrieval-filtering configuration.
      * <p>
@@ -473,11 +478,14 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
 
     /**
      * Perform a call to the external service to retrieve information about the term URI
-     * @param cvocEntry - the configuration for the DatasetFieldType associated with this term 
-     * @param term - the term uri as a string
+     *
+     * @param cvocEntry             - the configuration for the DatasetFieldType associated with this term
+     * @param term                  - the term uri as a string
+     * @param relatedDatasetFields  - siblings or childs of the term
      */
-    public void registerExternalTerm(JsonObject cvocEntry, String term) {
+    public void registerExternalTerm(JsonObject cvocEntry, String term, List<DatasetField> relatedDatasetFields) {
         String retrievalUri = cvocEntry.getString("retrieval-uri");
+        String termUriFieldName = cvocEntry.getString("term-uri-field");
         String prefix = cvocEntry.getString("prefix", null);
         if(StringUtils.isBlank(term)) {
             logger.fine("Ignoring blank term");
@@ -512,7 +520,13 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
             }
             if (evv.getValue() == null) {
                 String adjustedTerm = (prefix==null)? term: term.replace(prefix, "");
-                retrievalUri = retrievalUri.replace("{0}", adjustedTerm);
+
+                retrievalUri = replaceRetrievalUriParam(retrievalUri, "0", adjustedTerm);
+                retrievalUri = replaceRetrievalUriParam(retrievalUri, termUriFieldName, adjustedTerm);
+                for (DatasetField f : relatedDatasetFields) {
+                    retrievalUri = replaceRetrievalUriParam(retrievalUri, f.getDatasetFieldType().getName(), f.getValue());
+                }
+
                 logger.fine("Didn't find " + term + ", calling " + retrievalUri);
                 try (CloseableHttpClient httpClient = HttpClients.custom()
                         .addInterceptorLast(new HttpResponseInterceptor() {
@@ -554,6 +568,8 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
                             logger.fine("Wrote value for term: " + term);
                         } catch (JsonException je) {
                             logger.severe("Error retrieving: " + retrievalUri + " : " + je.getMessage());
+                        } catch (PersistenceException e) {
+                            logger.fine("Problem persisting: " + retrievalUri + " : " + e.getMessage());
                         }
                     } else {
                         logger.severe("Received response code : " + statusCode + " when retrieving " + retrievalUri
@@ -568,6 +584,17 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
             logger.fine("Term is not a URI: " + term);
         }
 
+    }
+
+    private String replaceRetrievalUriParam(String retrievalUri, String paramName, String value) {
+
+        if(retrievalUri.contains("encodeUrl:" + paramName)) {
+            retrievalUri = retrievalUri.replace("{encodeUrl:"+paramName+"}", URLEncoder.encode(value, StandardCharsets.UTF_8));
+        } else {
+            retrievalUri = retrievalUri.replace("{"+paramName+"}", value);
+        }
+
+        return retrievalUri;
     }
 
     /**

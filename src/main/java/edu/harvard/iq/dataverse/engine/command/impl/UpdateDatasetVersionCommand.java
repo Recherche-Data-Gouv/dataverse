@@ -115,8 +115,11 @@ public class UpdateDatasetVersionCommand extends AbstractDatasetCommand<Dataset>
         
         //Will throw an IllegalCommandException if a system metadatablock is changed and the appropriate key is not supplied.
         checkSystemMetadataKeyIfNeeded(getDataset().getOrCreateEditVersion(fmVarMet), persistedVersion);
-        
-        
+
+        getDataset().getOrCreateEditVersion().setLastUpdateTime(getTimestamp());
+
+        registerExternalVocabValuesIfAny(ctxt, getDataset().getOrCreateEditVersion(fmVarMet));
+
         try {
             // Invariant: Dataset has no locks preventing the update
             String lockInfoMessage = "saving current edits";
@@ -256,7 +259,6 @@ public class UpdateDatasetVersionCommand extends AbstractDatasetCommand<Dataset>
                 ctxt.ingest().recalculateDatasetVersionUNF(theDataset.getOrCreateEditVersion());
             }
 
-            theDataset.getOrCreateEditVersion().setLastUpdateTime(getTimestamp());
             theDataset.setModificationTime(getTimestamp());
 
             savedDataset = ctxt.em().merge(theDataset);

@@ -94,6 +94,8 @@ public abstract class AbstractCreateDatasetCommand extends AbstractDatasetComman
         if(!harvested) {
             checkSystemMetadataKeyIfNeeded(dsv, null);
         }
+
+        registerExternalVocabValuesIfAny(ctxt, dsv);
         
         theDataset.setCreator((AuthenticatedUser) getRequest().getUser());
         
