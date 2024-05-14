@@ -16,8 +16,8 @@ import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
+import javax.json.Json;
+import javax.json.JsonObject;
 
 public class DatasetFieldServiceBeanTest {
 

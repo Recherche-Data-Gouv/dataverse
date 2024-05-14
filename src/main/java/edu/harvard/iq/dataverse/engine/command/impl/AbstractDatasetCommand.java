@@ -235,4 +235,13 @@ public abstract class AbstractDatasetCommand<T> extends AbstractCommand<T> {
             }
         }
     }
+
+    protected void registerExternalVocabValuesIfAny(CommandContext ctxt, DatasetVersion newVersion) {
+        for (DatasetField df : newVersion.getFlatDatasetFields()) {
+            logger.fine("Found id: " + df.getDatasetFieldType().getId());
+            if (ctxt.dsField().getCVocConf(true).containsKey(df.getDatasetFieldType().getId())) {
+                ctxt.dsField().registerExternalVocabValues(df);
+            }
+        }
+    }
 }
