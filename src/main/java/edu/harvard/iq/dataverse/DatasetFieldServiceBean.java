@@ -584,6 +584,10 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
 
     private String replaceRetrievalUriParam(String retrievalUri, String paramName, String value) {
 
+        if(StringUtils.isBlank(paramName) || StringUtils.isBlank(value)) {
+            return retrievalUri;
+        }
+
         if(retrievalUri.contains("encodeUrl:" + paramName)) {
             retrievalUri = retrievalUri.replace("{encodeUrl:"+paramName+"}", URLEncoder.encode(value, StandardCharsets.UTF_8));
         } else {
