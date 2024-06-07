@@ -9,6 +9,8 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Set;
 
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,8 +18,7 @@ import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
-import javax.json.Json;
-import javax.json.JsonObject;
+
 
 public class DatasetFieldServiceBeanTest {
 
