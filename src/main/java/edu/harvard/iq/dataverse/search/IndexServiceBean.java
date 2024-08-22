@@ -10,6 +10,7 @@ import edu.harvard.iq.dataverse.DatasetFieldCompoundValue;
 import edu.harvard.iq.dataverse.DatasetFieldConstant;
 import edu.harvard.iq.dataverse.DatasetFieldServiceBean;
 import edu.harvard.iq.dataverse.DatasetFieldType;
+import edu.harvard.iq.dataverse.DatasetFieldValue;
 import edu.harvard.iq.dataverse.DatasetLinkingServiceBean;
 import edu.harvard.iq.dataverse.DatasetServiceBean;
 import edu.harvard.iq.dataverse.DatasetVersion;
@@ -1011,22 +1012,39 @@ public class IndexServiceBean {
                         }
 
                         if (dsfType.isControlledVocabulary()) {
-                            for (ControlledVocabularyValue controlledVocabularyValue : dsf.getControlledVocabularyValues()) {
-                                if (controlledVocabularyValue.getStrValue().equals(DatasetField.NA_VALUE)) {
-                                    continue;
-                                }
+                            /** If the cvv list is empty but the dfv list is not then it is assumed this was harvested
+                             *  from an installation that had controlled vocabulary entries that don't exist in our this db
+                             * @see <a href="https://github.com/IQSS/dataverse/issues/9992">Feature Request/Idea: Harvest metadata values that aren't from a list of controlled values #9992</a>
+                             */
+                            if (dsf.getControlledVocabularyValues().isEmpty()) {
+                                for (DatasetFieldValue dfv : dsf.getDatasetFieldValues()) {
+                                    if (dfv.getValue().equals(DatasetField.NA_VALUE)) {
+                                        continue;
+                                    }
+                                    solrInputDocument.addField(solrFieldSearchable, dfv.getValue());
 
-                                // Index in all used languages (display and metadata languages
-                                if (!dsfType.isAllowMultiples() || langs.isEmpty()) {
-                                    solrInputDocument.addField(solrFieldSearchable, controlledVocabularyValue.getStrValue());
-                                } else {
-                                    for(String locale: langs) {
-                                        solrInputDocument.addField(solrFieldSearchable, controlledVocabularyValue.getLocaleStrValue(locale));
+                                    if (dsfType.getSolrField().isFacetable()) {
+                                        solrInputDocument.addField(solrFieldFacetable, dfv.getValue());
                                     }
                                 }
+                            } else {
+                                for (ControlledVocabularyValue controlledVocabularyValue : dsf.getControlledVocabularyValues()) {
+                                    if (controlledVocabularyValue.getStrValue().equals(DatasetField.NA_VALUE)) {
+                                        continue;
+                                    }
 
-                                if (dsfType.getSolrField().isFacetable()) {
-                                    solrInputDocument.addField(solrFieldFacetable, controlledVocabularyValue.getStrValue());
+                                    // Index in all used languages (display and metadata languages
+                                    if (!dsfType.isAllowMultiples() || langs.isEmpty()) {
+                                        solrInputDocument.addField(solrFieldSearchable, controlledVocabularyValue.getStrValue());
+                                    } else {
+                                        for(String locale: langs) {
+                                            solrInputDocument.addField(solrFieldSearchable, controlledVocabularyValue.getLocaleStrValue(locale));
+                                        }
+                                    }
+
+                                    if (dsfType.getSolrField().isFacetable()) {
+                                        solrInputDocument.addField(solrFieldFacetable, controlledVocabularyValue.getStrValue());
+                                    }
                                 }
                             }
                         } else if (dsfType.getFieldType().equals(DatasetFieldType.FieldType.TEXTBOX)) {
