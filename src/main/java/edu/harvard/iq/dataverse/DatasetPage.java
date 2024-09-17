@@ -378,24 +378,25 @@ public class DatasetPage implements java.io.Serializable {
 
     public boolean isDatasetFieldEnabled(Long datasetFieldTypeId){
 
-        if(datasetFieldTypeId == null) {
-            return false;
-        }
-
-        DatasetFieldType datasetFieldType = fieldService.find(datasetFieldTypeId);
-
-        if("keyword".equals(datasetFieldType.getName())) {
+        if(datasetFieldTypeId != null) {
             Dataverse dv = dataset.getOwner();
-            if("inrae".equals(dv.getAlias())) {
-                return true;
-            }
-            for (Dataverse owner : dv.getOwners()) {
-                if("inrae".equals(owner.getAlias())) {
+            DatasetFieldType datasetFieldType = fieldService.find(datasetFieldTypeId);
+
+            // Keyword External Vocabulary Support is enabled only under inrae collections
+            if(dv != null && "keyword".equals(datasetFieldType.getName())) {
+                if("inrae".equals(dv.getAlias())) {
                     return true;
                 }
+                for (Dataverse owner : dv.getOwners()) {
+                    if("inrae".equals(owner.getAlias())) {
+                        return true;
+                    }
+                }
+                return false;
             }
         }
-        return false;
+        // Otherwise, enable by default
+        return true;
     }
 
     // TODO: Consider renaming "configureTools" to "fileConfigureTools".
