@@ -38,6 +38,9 @@ public class TemplatePage implements java.io.Serializable {
 
     @EJB
     EjbDataverseEngine commandEngine;
+
+    @EJB
+    DatasetFieldServiceBean fieldService;
     
     @EJB
     DataverseFieldTypeInputLevelServiceBean dataverseFieldTypeInputLevelService; 
@@ -259,4 +262,27 @@ public class TemplatePage implements java.io.Serializable {
         return (fieldInstructions!=null && !fieldInstructions.isBlank()) ? fieldInstructions : BundleUtil.getStringFromBundle("template.instructions.empty.label");
     }
 
+    public boolean isDatasetFieldEnabled(Long datasetFieldTypeId) {
+        // Always available except keyword field
+        if (datasetFieldTypeId == null) {
+            return true;
+        }
+        DatasetFieldType dft = fieldService.find(datasetFieldTypeId);
+        if(dft == null || !"keyword".equals(dft.getName())) {
+            return true;
+        }
+        // Keyword field is available only under inrae collections
+        Dataverse dv = dataverseService.find(ownerId);
+        if (dv != null) {
+            if ("inrae".equals(dv.getAlias())) {
+                return true;
+            }
+            for (Dataverse owner : dv.getOwners()) {
+                if ("inrae".equals(owner.getAlias())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

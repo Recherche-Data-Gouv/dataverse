@@ -73,7 +73,7 @@
                                             <span class="glyphicon glyphicon-question-sign tooltip-icon"
                                                   data-toggle="tooltip" data-placement="auto right" data-original-title="#{dsf.datasetFieldType.localeDescription}"></span>
                                         </th>
-                                        <c:set var="cvocOnDsf" value="#{DatasetPage.isDatasetFieldEnabled(dsf.datasetFieldType.id) and cvocConf.containsKey(dsf.datasetFieldType.id)}"/>
+                                        <c:set var="cvocOnDsf" value="#{cvocConf.containsKey(dsf.datasetFieldType.id) and ((datasetPage and DatasetPage.isDatasetFieldEnabled(dsf.datasetFieldType.id)) or (templatePage and TemplatePage.isDatasetFieldEnabled(dsf.datasetFieldType.id)))}"/>
                                         <td jsf:rendered="#{!anonymized or !settingsWrapper.shouldBeAnonymized(dsf)}">
                                             <!-- Primitive datasetFields -->
                                             <ui:fragment rendered="#{dsf.datasetFieldType.primitive}">
@@ -277,7 +277,7 @@
                                                             <ui:include src="datasetFieldForEditFragment.xhtml">
                                                                 <ui:param name="dsfv" value="#{dsfv}"/>
                                                                 <ui:param name="dsfvIndex" value="#{valCount.index}"/>
-                                                                <ui:param name="cvoc" value="#{cvocConf.containsKey(dsf.datasetFieldType.id) and DatasetPage.isDatasetFieldEnabled(dsf.datasetFieldType.id) ? cvocConf.get(dsf.datasetFieldType.id): null}"/>
+                                                                <ui:param name="cvoc" value="#{cvocConf.containsKey(dsf.datasetFieldType.id) and ((datasetPage and DatasetPage.isDatasetFieldEnabled(dsf.datasetFieldType.id)) or (templatePage and TemplatePage.isDatasetFieldEnabled(dsf.datasetFieldType.id))) ? cvocConf.get(dsf.datasetFieldType.id): null}"/>
                                                             </ui:include>
                                                         </div>
                                                         <!-- Add / Remove buttons -->
@@ -377,7 +377,7 @@
                                                                 <ui:include src="datasetFieldForEditFragment.xhtml">
                                                                     <ui:param name="dsfv" value="#{subdsf.singleValue}"/>
                                                                     <ui:param name="dsfvIndex" value="0"/>
-                                                                    <ui:param name="cvoc" value="#{cvocConf.containsKey(dsf.datasetFieldType.id) and DatasetPage.isDatasetFieldEnabled(dsf.datasetFieldType.id) ? cvocConf.get(dsf.datasetFieldType.id): cvocConf.containsKey(dsfv.datasetField.datasetFieldType.id) and DatasetPage.isDatasetFieldEnabled(sfv.datasetField.datasetFieldType.id) ? cvocConf.get(dsfv.datasetField.datasetFieldType.id): null}"/>
+                                                                    <ui:param name="cvoc" value="#{cvocConf.containsKey(dsf.datasetFieldType.id) and ((datasetPage and DatasetPage.isDatasetFieldEnabled(dsf.datasetFieldType.id)) or (templatePage and TemplatePage.isDatasetFieldEnabled(dsf.datasetFieldType.id))) ? cvocConf.get(dsf.datasetFieldType.id): cvocConf.containsKey(dsfv.datasetField.datasetFieldType.id) and ((datasetPage and DatasetPage.isDatasetFieldEnabled(dsfv.datasetField.datasetFieldType.id)) or (templatePage and TemplatePage.isDatasetFieldEnabled(dsfv.datasetField.datasetFieldType.id))) ? cvocConf.get(dsfv.datasetField.datasetFieldType.id): null}"/>
                                                                 </ui:include>
                                                             </ui:fragment>
                                                             <!-- MOVED SELECT ONE TO dataFieldForEdit -->
