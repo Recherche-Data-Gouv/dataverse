@@ -146,7 +146,7 @@ public class MakeDataCountApi extends AbstractApiBean {
             URL url = new URL(JvmSettings.DATACITE_REST_API_URL.lookup() +
                               "/events?doi=" +
                               authorityPlusIdentifier +
-                              "&source=crossref&page[size]=1000");
+                              "&source=crossref&page[size]=1000&page[cursor]=1");
             logger.fine("Retrieving Citations from " + url.toString());
             boolean nextPage = true;
             JsonArrayBuilder dataBuilder = Json.createArrayBuilder();
@@ -156,9 +156,11 @@ public class MakeDataCountApi extends AbstractApiBean {
                 int status = connection.getResponseCode();
                 if (status != 200) {
                     logger.warning("Failed to get citations from " + url.toString());
+                    connection.disconnect();
                     return error(Status.fromStatusCode(status), "Failed to get citations from " + url.toString());
                 }
                 JsonObject report = Json.createReader(connection.getInputStream()).readObject();
+                connection.disconnect();
                 JsonObject links = report.getJsonObject("links");
                 JsonArray data = report.getJsonArray("data");
                 Iterator<JsonValue> iter = data.iterator();
